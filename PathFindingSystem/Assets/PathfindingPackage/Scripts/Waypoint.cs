@@ -7,18 +7,22 @@ using UnityEngine;
 //similar in some design to a linked list
 public class Waypoint : MonoBehaviour
 {
+    [Header("References to the previous and next Waypoints")]
     //references to the previous and next waypoint
     public Waypoint previousWaypoint;
     public Waypoint nextWaypoint;
 
+    [Header("Width of the waypoint")]
     //let there be a max of 5 and a min of 0
     [Range(0f, 5f)]
     public float width = 1f;
+    [Header("The list of branches that this waypoint has")]
     //list of branches
     public List<Waypoint> branches = new List<Waypoint>();
 
     //let there be a max of 1 and a min of 0
     [Range(0f, 1f)]
+    [Header("How likely the ai will branch off the main path")]
     //what the branch ratio is
     public float branchRatio = 0.5f;
 

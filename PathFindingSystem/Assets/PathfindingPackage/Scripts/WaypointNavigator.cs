@@ -9,10 +9,13 @@ public class WaypointNavigator : MonoBehaviour
 
     [SerializeField] public bool playerNotSeen = true;
 
+    [Header("Gets the NavMeshAgent and the Waypoint Script")]
     //get references to the NavMeshAgent
     //and the Waypoints
     public NavMeshAgent controller;
     public Waypoint currentWaypoint;
+    
+    [Header("Gets the player")]
     //get the player
     public GameObject playerPosition;
 
@@ -27,8 +30,12 @@ public class WaypointNavigator : MonoBehaviour
 
         //set it so the ai slows down before reaching a waypoint
         controller.autoBraking = true;
+        
 
-        currentWaypoint = GameObject.FindObjectOfType<Waypoint>();
+        //make it so if there is no waypoint to start throw an error
+        if (currentWaypoint == null) {
+            Debug.LogError("There seems to be no waypoint for the AI to start on");
+        }
         //set the initial waypoint to move to
         controller.destination = currentWaypoint.GetPosition();
     }

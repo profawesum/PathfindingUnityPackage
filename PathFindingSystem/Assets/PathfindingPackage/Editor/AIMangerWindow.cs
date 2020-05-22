@@ -19,6 +19,13 @@ public class AIManagerWindow : EditorWindow
     //get the parent that the waypoints will be put under
     public Transform AIHolder;
 
+    //used for navmesh generation
+    //NavMeshSurface is part of the high level Unity NavmeshComponents
+    //Can be accessed from https://github.com/Unity-Technologies/NavMeshComponents
+    //the Unity Github Page
+    private NavMeshSurface navMeshSurface;
+    private GameObject navMesh;
+
     //GUI
     private void OnGUI()
     {
@@ -35,12 +42,12 @@ public class AIManagerWindow : EditorWindow
             EditorGUILayout.HelpBox("Root transform must be selected", MessageType.Warning);
         }
         //draw the buttons
-            //start the button box
-            EditorGUILayout.BeginVertical("box");
-            //call function draw button
-            DrawButtons();
-            //end the button box
-            EditorGUILayout.EndVertical();
+        //start the button box
+        EditorGUILayout.BeginVertical("box");
+        //call function draw button
+        DrawButtons();
+        //end the button box
+        EditorGUILayout.EndVertical();
         //apply any modifications to the menu
         obj.ApplyModifiedProperties();
     }
@@ -59,6 +66,20 @@ public class AIManagerWindow : EditorWindow
 
         if (AIHolder != null)
         {
+            //creates a navmesh
+            if (GUILayout.Button("Create Navmesh"))
+            {
+                createNavmesh();
+            }
+            //checks to see if there is a navmesh surface to rebake
+            if (navMeshSurface != null)
+            {
+                //rebakes the navmesh
+                if (GUILayout.Button("Rebake Navmesh"))
+                {
+                    bakeNavmesh();
+                }
+            }
             //basic player button
             if (GUILayout.Button("Basic Player"))
             {
@@ -90,6 +111,27 @@ public class AIManagerWindow : EditorWindow
         AIHolder = AIParent.transform;
     }
 
+    //create the navmesh
+    void createNavmesh() {
+
+        //create the navmesh
+        navMesh = new GameObject("NavMesh", typeof(NavMeshSurface));
+        navMesh.transform.SetParent(AIHolder, false);
+        //build the navmesh
+        navMeshSurface = navMesh.GetComponent<NavMeshSurface>();
+        navMeshSurface.BuildNavMesh();
+        //select the navmesh Object
+        Selection.activeGameObject = navMesh.gameObject;
+    }
+
+    //bakes the navmesh
+    void bakeNavmesh() {
+        //bake the navmesh
+        navMeshSurface.BuildNavMesh();
+        //select the game object
+        Selection.activeGameObject = navMesh.gameObject;
+    }
+
     //create a basic player
     void basicPlayer() {
 
@@ -107,15 +149,21 @@ public class AIManagerWindow : EditorWindow
         //add in a collider capsule
         basicPlayer.AddComponent<CapsuleCollider>();
 
+  
+
         //create a basic capsule
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         cube.transform.SetParent(basicPlayer.transform, false);
+
+        //ignore the player when baking the navmesh
+        basicPlayer.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
+        cube.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
 
         //select the new player
         Selection.activeGameObject = basicPlayer.gameObject;
 
     }
-    //create a basic AI
+    //create a basic AI that follows a path
     void basicAI() {
 
         //create the new basic ai
@@ -129,12 +177,17 @@ public class AIManagerWindow : EditorWindow
         //create a basic capsule
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         cube.transform.SetParent(basicAI.transform, false);
-        
+
+        //ignore the AI when baking the navmesh
+        basicAI.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
+        cube.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
+
         //select the new ai
         Selection.activeGameObject = basicAI.gameObject;
 
     }
 
+    //create an AI that will only chase the player
     void chasePlayer() {
 
         //create the new chase ai
@@ -151,10 +204,15 @@ public class AIManagerWindow : EditorWindow
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         cube.transform.SetParent(chaseAI.transform, false);
 
+        //ignore the AI when baking the navmesh
+        chaseAI.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
+        cube.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
+
         //select the new ai
         Selection.activeGameObject = chaseAI.gameObject;
     }
 
+    //create a more advanced AI
     void detectAndChasePlayer() {
 
         //create the new advanced ai
@@ -166,14 +224,16 @@ public class AIManagerWindow : EditorWindow
         advancedAI.GetComponent<NavMeshAgent>().baseOffset = 1.0f;
         //add the detect script
         advancedAI.AddComponent<Detect>();
-
-        //add in a sphere collider
-        advancedAI.AddComponent<SphereCollider>().radius = 5.0f;
-        advancedAI.GetComponent<SphereCollider>().isTrigger = true;
-
+        //set it so it is an advanced AI
+        advancedAI.GetComponent<Detect>().isadvancedAI = true;
+        
         //create a basic capsule
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         cube.transform.SetParent(advancedAI.transform, false);
+
+        //ignore the AI when baking the navmesh
+        advancedAI.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
+        cube.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
 
         //select the new ai
         Selection.activeGameObject = advancedAI.gameObject;

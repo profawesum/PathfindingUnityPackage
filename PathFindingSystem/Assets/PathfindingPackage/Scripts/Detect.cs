@@ -21,20 +21,34 @@ public class Detect : MonoBehaviour
     //whether the ai should look at the player or not
     public bool lookAt;
 
+    //used for navmesh raycast
+    public Transform target;
+    private bool blocked = false;
+
+    //used to see if the ai is an advanced one
+    public bool isadvancedAI;
+
+    //also used in player detection
+    public float distance;
+    public float maxDistance = 10;
+
 
     //what to do when the scene loads
     private void Start()
     {
+      
         //get the movement component
         navigator = this.GetComponent<WaypointNavigator>();
         //find the navmesh agent component
         agent = this.GetComponent<NavMeshAgent>();
         //find the player
         player = GameObject.FindGameObjectWithTag("Player");
+        target = player.transform;
     }
 
 
-    private void Update() {
+    private void Update()
+    {
 
         //get the players position - this position
         Vector3 targetDir = player.transform.position - this.transform.position;
@@ -47,54 +61,31 @@ public class Detect : MonoBehaviour
             agent.destination = player.transform.position;
         }
 
-        Collider[] hits = Physics.OverlapSphere(transform.position, 25.0f);
-        int i = 0;
-        while (i < hits.Length)
+        //navmesh detection
+        NavMeshHit navHit;
+        //checks to see if it is an advanced AI
+        if (isadvancedAI)
         {
-            if (hits[i].name == "Player")
+            //get the distance between the player and the AI
+            distance = Vector3.Distance(player.transform.position, this.transform.position);
+
+            //check to see if the ray is being blocked by something
+            blocked = NavMesh.Raycast(transform.position, target.position, out navHit, NavMesh.AllAreas);
+            //draw a debug line
+            Debug.DrawLine(transform.position, target.position, blocked ? Color.red : Color.green);
+            //if the ray is blocked or the distance is greater than the max distance
+            if (blocked || distance >= maxDistance)
             {
-
-                if (angle < 45.0f)
-                {
-                    lookAt = true;
-                }
-                else
-                {
-                    lookAt = false;
-                }
-                transform.LookAt(player.transform);
-                //makes it so it has seen the player
-                // navigator.playerNotSeen = false;
-
-                //look at the player
-                transform.LookAt(player.transform.position);
-
-                //move towards the player
-                agent.destination = player.transform.position;
-                //what to do when the player has been seen
+                //draw some debug lines
+                Debug.DrawRay(navHit.position, Vector3.up, Color.red);
+                Debug.DrawLine(transform.position, target.position,Color.red);
+                //make it so the ai cannot see the player
+                navigator.playerNotSeen = true;
+            }
+            //if the ray is not blocked and the distance is less than the max distance then the ai can see the player
+            if (!blocked && distance <= maxDistance) {
                 SeenPlayer();
             }
-            //increase the iterator
-            i++;
-        }
-    }
-
-    //on trigger enter make the ai see the player
-    //lazy way of doing it
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.tag == "Player") {
-            SeenPlayer();
-        }
-    }
-
-
-    //when the player leaves the trigger zone make it so the ai cannot see the player
-    //lazy way of doing it
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.tag == "Player") {
-            navigator.playerNotSeen = true;
         }
     }
 

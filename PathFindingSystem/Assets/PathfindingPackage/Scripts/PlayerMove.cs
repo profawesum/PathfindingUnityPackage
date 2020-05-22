@@ -3,9 +3,11 @@ using System.Collections;
 
 public class PlayerMove : MonoBehaviour
 {
+
     //reference to the character controller
     CharacterController characterController;
 
+    [Header ("Player movement variables")]
     //various movement 
     public float speed = 6.0f;
     public float jumpSpeed = 8.0f;
